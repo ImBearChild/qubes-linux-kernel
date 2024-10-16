@@ -76,6 +76,8 @@ CONFIG_STACKPROTECTOR_STRONG=y
 
 # CONFIG_HOTPLUG_PCI is not set
 
+CONFIG_HOTPLUG_PCI=y
+
 
 ################################################################################
 ## Deactivate selinux by default
