@@ -71,7 +71,7 @@ CONFIG_STACKPROTECTOR_STRONG=y
 ## Disable PCI hotplug to prevent DMA attacks via ExpressCard or Thunderbolt
 ## ports. QubesOS/qubes-issues#1673
 
-# CONFIG_HOTPLUG_PCI is not set
+CONFIG_HOTPLUG_PCI=y
 
 
 ################################################################################
