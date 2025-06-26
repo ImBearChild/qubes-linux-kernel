@@ -22,7 +22,7 @@
 %global cpu_arch x86_64
 %define cpu_arch_flavor %cpu_arch
 
-%define kernelrelease %(echo %{upstream_version} | sed 's/^[0-9]\\.[0-9]\\+$/\\0.0/;s/-rc.*/.0/')-%rel.%cpu_arch
+%define kernelrelease %(echo %{upstream_version} | sed 's/-rc.*//;s/^[0-9]\\.[0-9]\\+$/\\0.0/')-%rel.%cpu_arch
 %define my_builddir %_builddir/%{name}-%{version}
 
 %define build_src_dir %my_builddir/linux-%upstream_version
@@ -32,9 +32,6 @@
 
 %define install_vdso 1
 %define debuginfodir /usr/lib/debug
-
-# should macbook spi driver be included
-%define with_macbook_spi 0
 
 # debuginfo build is disabled by default to save disk space (it needs 2-3GB build time)
 %define with_debuginfo 0
@@ -70,6 +67,7 @@ BuildRequires:  busybox
 BuildRequires:  bc
 BuildRequires:  openssl
 BuildRequires:  openssl-devel
+BuildRequires:  libuuid-devel
 %if 0%{?fedora} >= 41
 BuildRequires:  openssl-devel-engine
 %endif
@@ -129,9 +127,6 @@ Source1:        @dummy-psu@
 Source2:        @dummy-backlight@
 Source3:        @linux-utils@
 Source4:        @v4l2loopback@
-%if %{with_macbook_spi}
-Source6:        macbook12-spi-driver-2905d318d1a3ee1a227052490bf20eddef2592f9.tar
-%endif
 Source16:       guards
 Source17:       apply-patches
 Source18:       mod-sign.sh
@@ -145,12 +140,12 @@ Patch1: 0002-mce-hide-EBUSY-initialization-error-on-Xen.patch
 Patch2: 0003-Log-error-code-of-EVTCHNOP_bind_pirq-failure.patch
 Patch5: 0006-block-add-no_part_scan-module-parameter.patch
 Patch12: 0013-xen-pcifront-pciback-Update-pciif.h-with-err-and-res.patch
-Patch25: 0001-Re-enable-interrupts-before-loading-PNVM.patch
 Patch26: 0001-sound-Disable-SG-buffer.patch
 Patch27: 0001-amdgpu-timeout.patch
 Patch28: 0001-iwlwifi-avoid-writing-to-MSI-X-page-when-MSI-X-is-no.patch
 Patch30: 0004-pvops-respect-removable-xenstore-flag-for-block-devi.patch
 Patch31: 0001-PCI-add-a-reset-quirk-for-Intel-I219LM-ethernet-adap.patch
+Patch32: 0001-Revert-e1000e-change-k1-configuration-on-MTP-and-lat.patch
 
 # S0ix support:
 Patch61: xen-events-Add-wakeup-support-to-xen-pirq.patch
@@ -263,12 +258,6 @@ tar -x -C %_builddir -zf %{SOURCE3} --strip-components=2 linux-utils/kernel-modu
 rm -rf %_builddir/v4l2loopback
 tar -x -C %_builddir -zf %{SOURCE4}
 
-%if %{with_macbook_spi}
-rm -rf %_builddir/macbook12-spi-driver
-tar -x -C %_builddir -f %{SOURCE6}
-mv %_builddir/$(basename %{SOURCE6} .tar) %_builddir/macbook12-spi-driver
-%endif
-
 %build
 
 set -e
@@ -296,13 +285,6 @@ fi
 if [ -d "%_builddir/v4l2loopback" ]; then
     make -C %kernel_build_dir M=%_builddir/v4l2loopback modules
 fi
-
-%if %{with_macbook_spi}
-# Build applespi, apple-ibridge, apple-ib-tb, apple-ib-als modules
-if [ -d "%_builddir/macbook12-spi-driver" ]; then
-    make -C %kernel_build_dir M=%_builddir/macbook12-spi-driver modules
-fi
-%endif
 
 %define __modsign_install_post \
   if [ "%{signmodules}" -eq "1" ]; then \
@@ -369,11 +351,6 @@ fi
 if [ -d "%_builddir/v4l2loopback" ]; then
     make modules_install $MAKE_ARGS INSTALL_MOD_PATH=%buildroot M=%_builddir/v4l2loopback
 fi
-%if %{with_macbook_spi}
-if [ -d "%_builddir/macbook12-spi-driver" ]; then
-    make modules_install $MAKE_ARGS INSTALL_MOD_PATH=%buildroot M=%_builddir/macbook12-spi-driver
-fi
-%endif
 
 mkdir -p %buildroot/%src_install_dir
 
