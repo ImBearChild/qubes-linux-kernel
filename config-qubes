@@ -8,7 +8,6 @@
 
 CONFIG_EXPERT=y
 
-
 ################################################################################
 ## Use xz to save space on /boot
 
@@ -22,7 +21,6 @@ CONFIG_KERNEL_XZ=y
 
 CONFIG_IKCONFIG=y
 CONFIG_IKCONFIG_PROC=y
-
 
 ################################################################################
 ## Enable some more hardening options
@@ -52,7 +50,6 @@ CONFIG_INIT_ON_ALLOC_DEFAULT_ON=y
 CONFIG_INIT_ON_FREE_DEFAULT_ON=y
 
 CONFIG_PANIC_ON_OOPS=y
-CONFIG_PANIC_ON_OOPS_VALUE=1
 CONFIG_PANIC_TIMEOUT=-1
 
 CONFIG_SCHED_STACK_END_CHECK=y
@@ -79,7 +76,7 @@ CONFIG_HOTPLUG_PCI=y
 
 # CONFIG_DEFAULT_SECURITY_SELINUX is not set
 CONFIG_DEFAULT_SECURITY_DAC=y
-CONFIG_LSM="yama,loadpin,safesetid,integrity"
+CONFIG_LSM="landlock,yama,loadpin,safesetid,integrity"
 
 
 ################################################################################
@@ -180,3 +177,12 @@ CONFIG_PREEMPT=y
 ## AMD Threadripper platforms
 CONFIG_PHYSICAL_START=0x200000
 CONFIG_PHYSICAL_ALIGN=0x200000
+
+## AMD XDNA cannot work under Xen.  It requires PASID, which Xen does
+## not expose to any guest.  Also, AMDXDNA breaks booting under Xen
+## unless it is patched to fail to probe there.
+##
+## See <https://github.com/QubesOS/qubes-issues/issues/10275> and
+## <https://lore.kernel.org/dri-devel/20251213054513.87925-1-superm1@kernel.org/t/#u>
+## for details.
+# CONFIG_DRM_ACCEL_AMDXDNA is not set
